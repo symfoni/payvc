@@ -1,0 +1,18 @@
+{
+  "formatter": {
+    "indentStyle": "tab",
+    "lineWidth": 120,
+    "enabled": true
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "style": {
+        "useSelfClosingElements": "off",
+        "noImplicitBoolean": "off"
+      },
+      "correctness": {}
+    }
+  }
+}

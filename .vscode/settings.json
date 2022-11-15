@@ -1,0 +1,10 @@
+{
+    "editor.defaultFormatter": "rome.rome",
+    "[typescriptreact]": {
+        "editor.defaultFormatter": "rome.rome",
+    },
+    "[prisma]": {
+        "editor.defaultFormatter": "Prisma.prisma",
+    },
+    "editor.formatOnSave": true
+}
