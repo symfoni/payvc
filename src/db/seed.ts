@@ -1,4 +1,11 @@
-import { CredentialOfferStatus, RequsitionStatus, TransactionStatus, User, UserRole } from "@prisma/client";
+import {
+	CredentialOfferStatus,
+	ExchangeType,
+	TransactionRequsitionStatus,
+	TransactionStatus,
+	User,
+	UserRole,
+} from "@prisma/client";
 import { prisma } from ".";
 const { execSync } = require("child_process");
 
@@ -30,6 +37,11 @@ async function main() {
 			price: 800,
 		},
 	});
+	const exchangeTypeWeb = await prisma.credentialExchange.create({
+		data: {
+			type: ExchangeType.WEB,
+		},
+	});
 
 	const jon = await prisma.user.create({
 		data: {
@@ -48,6 +60,11 @@ async function main() {
 							name: "NationalIdentityNO",
 							price: 100,
 							status: CredentialOfferStatus.APPROVED,
+							exchange: {
+								connect: {
+									id: exchangeTypeWeb.id,
+								},
+							},
 							credentialType: {
 								connect: {
 									id: nationalIdentityCredentialType.id,
@@ -105,6 +122,11 @@ async function main() {
 							credentialType: {
 								connect: {
 									name: boardDirectorCredentialType.name,
+								},
+							},
+							exchange: {
+								connect: {
+									id: exchangeTypeWeb.id,
 								},
 							},
 							parentRequirement: {
@@ -190,13 +212,13 @@ async function main() {
 	}
 	const tx = await prisma.transaction.create({
 		data: {
-			requisitionStatus: RequsitionStatus.NEW,
+			transactionRequsitionStatus: TransactionRequsitionStatus.NEW,
 			requsition: {
 				connect: {
 					id: boardDirectorRequisition?.id,
 				},
 			},
-			transactionStatus: TransactionStatus.RESERVED,
+			transactionStatus: TransactionStatus.CREATED,
 			wallet: {
 				connect: {
 					id: elon.businesses[0].id,

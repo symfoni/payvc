@@ -63,7 +63,7 @@ export const NEXT_AUTH_OPTIONS: NextAuthOptions = {
 						email: token.email,
 					},
 					include: {
-						businesses: true,
+						selectedBusiness: true,
 					},
 				});
 			}
@@ -80,7 +80,7 @@ export const NEXT_AUTH_OPTIONS: NextAuthOptions = {
 					roles: user.roles,
 					id: user.id,
 					// @ts-ignore
-					businesses: user.businesses,
+					selectedBusiness: user.selectedBusiness,
 				},
 			});
 		},

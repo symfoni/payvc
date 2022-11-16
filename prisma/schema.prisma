@@ -28,12 +28,24 @@ enum CredentialOfferStatus {
   APPROVED
 }
 
-enum RequsitionStatus {
+enum TransactionStatus {
+  CREATED
+  RESERVED
+  FULLFILLED
+}
+
+enum TransactionRequsitionStatus {
   NEW
+  REQUESTED_BY_USER
+  REQUESTED_BY_WALLET
   VALIDATEDBYISSUER
   VALIDATEDBYWALLET
   VALIDATED
   FULLFILLED
+}
+
+enum ExchangeType {
+  WEB
 }
 
 model Account {
@@ -64,15 +76,17 @@ model Session {
 }
 
 model User {
-  id            String     @id @default(cuid())
-  name          String?
-  email         String?    @unique
-  emailVerified DateTime?
-  image         String?
-  roles         UserRole[] @default([USER])
-  accounts      Account[]
-  sessions      Session[]
-  businesses    Business[]
+  id                 String     @id @default(cuid())
+  name               String?
+  email              String?    @unique
+  emailVerified      DateTime?
+  image              String?
+  roles              UserRole[] @default([USER])
+  accounts           Account[]
+  sessions           Session[]
+  businesses         Business[] @relation("AllBusinesses")
+  selectedBusinessId String?
+  selectedBusiness   Business?  @relation(fields: [selectedBusinessId], references: [id])
 }
 
 model VerificationToken {
@@ -91,11 +105,12 @@ model Business {
   invoiceInfo      String?
   did              String?           @unique
   apikey           String?           @unique
-  users            User[] // A business can have many users (people/admins of the business)
+  users            User[]            @relation("AllBusinesses")
   payments         Payment[]
   transactions     Transaction[]
   credentialOffers CredentialOffer[]
   requsitions      Requsition[]      @relation(name: "verifierRequsitions")
+  selectedByUsers  User[]
 }
 
 model CredentialType {
@@ -107,21 +122,29 @@ model CredentialType {
   requsitions      Requsition[]
 }
 
+model CredentialExchange {
+  id              String            @id @default(cuid())
+  type            ExchangeType      @unique @default(WEB)
+  CredentialOffer CredentialOffer[]
+}
+
 // Isser put up a offer for a issue credential
 model CredentialOffer {
-  id                  String                @id @default(cuid())
-  createdAt           DateTime              @default(now())
-  issuerId            String
-  name                String                @unique
-  price               Int
-  credentialType      CredentialType        @relation(fields: [credentialTypeId], references: [id])
-  credentialTypeId    String
-  issuer              Business              @relation(fields: [issuerId], references: [id])
-  parentRequirementId String?
-  parentRequirement   CredentialOffer?      @relation("CredentialOfferRequirements", fields: [parentRequirementId], references: [id])
-  requirements        CredentialOffer[]     @relation("CredentialOfferRequirements")
-  status              CredentialOfferStatus
-  transactions        Transaction[]         @relation(name: "CredentialOfferTransactions")
+  id                   String                @id @default(cuid())
+  createdAt            DateTime              @default(now())
+  issuerId             String
+  name                 String                @unique
+  price                Int
+  credentialType       CredentialType        @relation(fields: [credentialTypeId], references: [id])
+  credentialTypeId     String
+  issuer               Business              @relation(fields: [issuerId], references: [id])
+  parentRequirementId  String?
+  parentRequirement    CredentialOffer?      @relation("CredentialOfferRequirements", fields: [parentRequirementId], references: [id])
+  requirements         CredentialOffer[]     @relation("CredentialOfferRequirements")
+  status               CredentialOfferStatus
+  transactions         Transaction[]         @relation(name: "CredentialOfferTransactions")
+  exchange             CredentialExchange    @relation(fields: [credentialExchangeId], references: [id])
+  credentialExchangeId String
 }
 
 model Requsition {
@@ -136,21 +159,16 @@ model Requsition {
 }
 
 model Transaction {
-  id                String            @id @default(cuid())
-  createdAt         DateTime          @default(now())
-  wallet            Business          @relation(fields: [walletId], references: [id])
-  walletId          String
-  requisitionStatus RequsitionStatus
-  transactionStatus TransactionStatus
-  credentialOfferId String?
-  requsition        Requsition        @relation(name: "transactionsForRequsition", fields: [requsitionId], references: [id])
-  requsitionId      String
-  credentialOffer   CredentialOffer?  @relation(name: "CredentialOfferTransactions", fields: [credentialOfferId], references: [id])
-}
-
-enum TransactionStatus {
-  RESERVED
-  FULLFILLED
+  id                          String                      @id @default(cuid())
+  createdAt                   DateTime                    @default(now())
+  wallet                      Business                    @relation(fields: [walletId], references: [id])
+  walletId                    String
+  transactionRequsitionStatus TransactionRequsitionStatus
+  transactionStatus           TransactionStatus
+  credentialOfferId           String?
+  requsition                  Requsition                  @relation(name: "transactionsForRequsition", fields: [requsitionId], references: [id])
+  requsitionId                String
+  credentialOffer             CredentialOffer?            @relation(name: "CredentialOfferTransactions", fields: [credentialOfferId], references: [id])
 }
 
 model Payment {

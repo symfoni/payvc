@@ -2,7 +2,7 @@
 import * as trpc from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import * as trpcNext from "@trpc/server/adapters/next";
-import { unstable_getServerSession } from "next-auth";
+import { Session, unstable_getServerSession } from "next-auth";
 import { NEXT_AUTH_OPTIONS } from "../pages/api/auth/[...nextauth]";
 
 /**
@@ -16,6 +16,19 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
 		return {};
 	}
 	// Handle apikeys
+	let session = await getServerSessionFromAPIKey(opts);
+	// handle regular sessions with clients
+	if (!session) {
+		session = await unstable_getServerSession(opts.req, opts.res, NEXT_AUTH_OPTIONS);
+	}
+	return {
+		session,
+	};
+}
+
+export type Context = trpc.inferAsyncReturnType<typeof createContext>;
+
+async function getServerSessionFromAPIKey(opts: trpcNext.CreateNextContextOptions): Promise<Session | null> {
 	if (opts.req.headers["X-Auth-Key"] && typeof opts.req.headers["X-Auth-Key"] === "string") {
 		if (opts.req.headers["X-Auth-Email"] && typeof opts.req.headers["X-Auth-Email"] === "string") {
 			const business = await prisma.business.findFirst({
@@ -30,14 +43,18 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
 					},
 				});
 				if (user) {
-					return {
-						session: {
-							user: {
-								...user,
-								businesses: [business],
-							},
+					const session: Session = {
+						user: {
+							roles: user.roles,
+							email: user.email,
+							name: user.name,
+							id: user.id,
+							selectedBusiness: business,
 						},
+						// TODO - Add expiry to apkey
+						expires: "",
 					};
+					return session;
 				} else {
 					throw new TRPCError({
 						code: "UNAUTHORIZED",
@@ -56,13 +73,7 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
 				message: "You must provide an email address to use the API.",
 			});
 		}
+	} else {
+		return null;
 	}
-	// handle regular sessions with clients
-	const session = await unstable_getServerSession(opts.req, opts.res, NEXT_AUTH_OPTIONS);
-
-	return {
-		session,
-	};
 }
-
-export type Context = trpc.inferAsyncReturnType<typeof createContext>;

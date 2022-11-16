@@ -26,7 +26,7 @@ export function PayVCPrismaAdapter(p: PrismaClient): Adapter {
 				include: {
 					user: {
 						include: {
-							businesses: true,
+							selectedBusiness: true,
 						},
 					},
 				},
