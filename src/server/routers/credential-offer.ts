@@ -49,7 +49,13 @@ export const credentialOfferRouter = router({
 						},
 					},
 				},
-				select: exposedFields,
+				include: {
+					credentialType: {
+						include: {
+							requsitions: true,
+						},
+					},
+				},
 			});
 			if (!credentialOffer) {
 				throw new TRPCError({
@@ -63,11 +69,18 @@ export const credentialOfferRouter = router({
 					message: "Credential offer is not approved",
 				});
 			}
+			if (!credentialOffer.credentialType.requsitions[0]) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "Credential offer is not linked to requsition",
+				});
+			}
 			const random = randomUUID();
 			const tx = await prisma.transaction.create({
 				data: {
 					transactionRequsitionStatus: TransactionRequsitionStatus.REQUESTED_BY_WALLET,
 					transactionStatus: TransactionStatus.CREATED,
+					price: credentialOffer.credentialType.requsitions[0].price,
 					wallet: {
 						connectOrCreate: {
 							where: {
@@ -154,7 +167,7 @@ export const credentialOfferRouter = router({
 				nextCursor,
 			};
 		}),
-	listMy: protectedProcedure
+	listMy: businessAdminProcedure
 		.input(
 			z
 				.object({
@@ -164,48 +177,36 @@ export const credentialOfferRouter = router({
 				.default({}),
 		)
 		.query(async ({ input, ctx }) => {
-			const { cursor, limit } = input;
-
-			const userBusinesses = await prisma.user.findUnique({
-				where: {
-					id: ctx.session.user.id,
-				},
-				select: {
-					businesses: {
-						select: {
-							id: true,
-						},
-					},
-				},
-			});
-			const businessIds = userBusinesses.businesses.flatMap((b) => b.id);
 			const items = await prisma.credentialOffer.findMany({
-				select: exposedFields,
-				// get an extra item at the end which we'll use as next cursor
+				// select: exposedFields,
 				where: {
 					issuerId: {
-						in: businessIds,
+						in: ctx.session.user.selectedBusiness.id,
 					},
 				},
-				take: limit + 1,
-				cursor: cursor
+				take: input.limit + 1,
+				cursor: input.cursor
 					? {
-							id: cursor,
+							id: input.cursor,
 					  }
 					: undefined,
 				orderBy: {
 					id: "desc",
 				},
+				include: {
+					transactions: {
+						where: {
+							transactionRequsitionStatus: TransactionRequsitionStatus.FULLFILLED,
+						},
+					},
+				},
 			});
-			let nextCursor: typeof cursor | undefined = undefined;
-			if (items.length > limit) {
-				// Remove the last item and use it as next cursor
-
-				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+			console.log("items.length ", items.length);
+			let nextCursor: typeof input.cursor | undefined = undefined;
+			if (items.length > input.limit) {
 				const nextItem = items.pop()!;
 				nextCursor = nextItem.id;
 			}
-
 			return {
 				items: items.reverse(),
 				nextCursor,
