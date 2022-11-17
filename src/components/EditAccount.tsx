@@ -6,8 +6,8 @@ import { trpc } from "../utils/trpc";
 interface Props {}
 
 export const EditAccount: React.FC<Props> = ({ ...props }) => {
-	const { data: account, isLoading, error } = trpc.account.me.useQuery(null, { retry: false });
-	const updateUser = trpc.account.update.useMutation();
+	const { data: account, isLoading, error } = trpc.user.me.useQuery(null, { retry: false });
+	const updateUser = trpc.user.update.useMutation();
 
 	const [name, setName] = useState("");
 
@@ -71,10 +71,14 @@ export const EditAccount: React.FC<Props> = ({ ...props }) => {
 				</Grid>
 				<Grid xs={12}>
 					<Text size={"$sm"} css={{ margin: "$4" }}>
-						Businesses
+						Businesses (Click to select)
 					</Text>
 					{account.businesses.map((business) => (
-						<Badge key={business.id} css={{ margin: "$4" }}>
+						<Badge
+							key={business.id}
+							css={{ margin: "$4", cursor: "pointer" }}
+							onClick={() => updateUser.mutate({ selectedBusinessId: business.id })}
+						>
 							{business.name}
 						</Badge>
 					))}

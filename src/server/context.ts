@@ -16,7 +16,7 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
 		return {};
 	}
 	// Handle apikeys
-	let session = await getServerSessionFromAPIKey(opts);
+	let session: Session = await getServerSessionFromAPIKey(opts);
 	// handle regular sessions with clients
 	if (!session) {
 		session = await unstable_getServerSession(opts.req, opts.res, NEXT_AUTH_OPTIONS);

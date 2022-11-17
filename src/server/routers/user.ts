@@ -13,13 +13,61 @@ import { prisma } from "../../db";
  * It's important to always explicitly say which fields you want to return in order to not leak extra information
  * @see https://github.com/prisma/prisma/issues/9353
  */
-const defaultUserSelect = Prisma.validator<Prisma.UserSelect>()({
+const exposedFields = Prisma.validator<Prisma.UserSelect>()({
 	id: true,
 	name: true,
 	email: true,
 });
+const exposedFieldsSelf = Prisma.validator<Prisma.UserSelect>()({
+	id: true,
+	name: true,
+	email: true,
+	businesses: true,
+	selectedBusiness: true,
+	emailVerified: true,
+	image: true,
+	roles: true,
+});
 
 export const userRouter = router({
+	me: protectedProcedure.input(z.object({}).nullish).query(async ({ input, ctx }) => {
+		const items = await prisma.user.findUniqueOrThrow({
+			select: exposedFieldsSelf,
+			where: {
+				email: ctx.session.user.email,
+			},
+		});
+
+		return items;
+	}),
+	update: protectedProcedure
+		.input(
+			z.object({
+				selectedBusinessId: z.string().nullish(),
+				addBusiness: z.string().nullish(),
+				name: z.string().min(2).nullish(),
+			}),
+		)
+		.mutation(async ({ input, ctx }) => {
+			const user = await prisma.user.update({
+				where: {
+					id: ctx.session.user.id,
+				},
+				data: {
+					selectedBusinessId: input.selectedBusinessId ? input.selectedBusinessId : undefined,
+					name: input.name ? input.name : undefined,
+					businesses: input.addBusiness
+						? {
+								connect: {
+									id: input.addBusiness,
+								},
+						  }
+						: undefined,
+				},
+				select: exposedFields,
+			});
+			return user;
+		}),
 	list: protectedProcedure // TODO Getting user data must be protected in a way. Requiering a the user to have a role isnt really enough
 		.input(
 			z.object({
@@ -38,7 +86,7 @@ export const userRouter = router({
 			const { cursor } = input;
 
 			const items = await prisma.user.findMany({
-				select: defaultUserSelect,
+				select: exposedFields,
 				// get an extra item at the end which we'll use as next cursor
 				take: limit + 1,
 				where: {},
@@ -75,7 +123,7 @@ export const userRouter = router({
 			const { id } = input;
 			const post = await prisma.user.findUnique({
 				where: { id },
-				select: defaultUserSelect,
+				select: exposedFields,
 			});
 			if (!post) {
 				throw new TRPCError({
@@ -91,7 +139,7 @@ export const userRouter = router({
 				email: z.string(),
 			}),
 		)
-		.query(async ({ input }) => {
+		.query(async ({ input, ctx }) => {
 			const { email } = input;
 			const post = await prisma.user.findUnique({
 				where: { email },
@@ -124,7 +172,7 @@ export const userRouter = router({
 					email: input.email,
 					name: input.name,
 				},
-				select: defaultUserSelect,
+				select: exposedFields,
 			});
 			return user;
 		}),

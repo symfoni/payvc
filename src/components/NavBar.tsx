@@ -1,6 +1,7 @@
-import { Avatar, Button, Dropdown, Grid, Navbar, Text, Link as NextLink } from "@nextui-org/react";
+import { Avatar, Button, Dropdown, Grid, Navbar, Text, Link as UiLink } from "@nextui-org/react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import React, { useEffect } from "react";
 import { useGlobalState } from "../utils/global-state";
 
@@ -16,17 +17,9 @@ export const NavBar: React.FC<Props> = ({ ...props }) => {
 	// 	</>
 	// );
 	const { data, status } = useSession();
-	const all = useSession();
 	const MenuLinks = (props: { collapsed?: boolean }) => {
 		const { collapsed } = { collapsed: false, ...props };
-
-		const { handleSelectBusinessId, selectedBusinessId } = useGlobalState();
-
-		useEffect(() => {
-			if (status === "authenticated" && data?.user?.businesses?.length > 1 && !selectedBusinessId) {
-				handleSelectBusinessId(data.user.businesses[0].id);
-			}
-		}, [status]);
+		const router = useRouter();
 
 		return (
 			<>
@@ -38,35 +31,23 @@ export const NavBar: React.FC<Props> = ({ ...props }) => {
 
 				{status === "authenticated" && (
 					<>
-						{/* <Link href="/account">
-							<Avatar css={{ cursor: "pointer" }} squared text={data.user.email}></Avatar>
-						</Link> */}
-
-						{/* <Dropdown>
-							<Dropdown.Button light>Symfoni AS</Dropdown.Button>
-							<Dropdown.Menu aria-label="Static Actions">
-								<Dropdown.Item key="new">Business</Dropdown.Item>
-								<Dropdown.Item key="copy" withDivider>
-									Symfoni AS
-								</Dropdown.Item>
-								<Dropdown.Item key="edit">Registerenheten i Brønnøysund</Dropdown.Item>
-							</Dropdown.Menu>
-						</Dropdown> */}
-						{/* <Button id={`sign-in${collapsed ? "-collapsed" : ""}`} flat onPress={() => signOut()}>
-							Sign out
-						</Button> */}
+						<Button flat>{data.user.selectedBusiness ? data.user.selectedBusiness.name : "Select business"}</Button>
 
 						<Dropdown>
 							<Dropdown.Button flat>{data.user.name}</Dropdown.Button>
-							<Dropdown.Menu>
-								<Dropdown.Item>
-									<Link href="/account">Account</Link>
-								</Dropdown.Item>
-								<Dropdown.Item>
-									<Link href={""} onClick={() => signOut()}>
-										Sign out
-									</Link>
-								</Dropdown.Item>
+							<Dropdown.Menu
+								onAction={(key) => {
+									console.log(key);
+									if (key === "sign-out") {
+										signOut();
+									}
+									if (key === "account") {
+										router.push("/account");
+									}
+								}}
+							>
+								<Dropdown.Item key="account">Account</Dropdown.Item>
+								<Dropdown.Item key="sign-out">Sign out</Dropdown.Item>
 							</Dropdown.Menu>
 						</Dropdown>
 					</>
