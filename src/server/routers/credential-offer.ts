@@ -8,6 +8,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { prisma, Prisma } from "../../db";
 import { CredentialOfferStatus, TransactionRequsitionStatus, TransactionStatus } from "@prisma/client";
+import { randomUUID } from "crypto";
 
 /**
  * Default selector for Post.
@@ -25,15 +26,16 @@ const exposedFields = Prisma.validator<Prisma.CredentialOfferSelect>()({
 });
 
 export const credentialOfferRouter = router({
-	selectIssuer: businessAdminProcedure
+	selectIssuer: publicProcedure // REVIEW - Security risk, how can we limit this when evry instance of the wallet app has semi-public code.
 		.input(
 			z.object({
 				credentialOfferId: z.string(),
 				requsitionId: z.string(),
+				walletId: z.string(),
 			}),
 		)
-		.mutation(async ({ input, ctx }) => {
-			const { credentialOfferId, requsitionId } = input;
+		.mutation(async ({ input }) => {
+			const { credentialOfferId, requsitionId, walletId } = input;
 			const credentialOffer = await prisma.credentialOffer.findFirst({
 				where: {
 					id: credentialOfferId,
@@ -61,13 +63,20 @@ export const credentialOfferRouter = router({
 					message: "Credential offer is not approved",
 				});
 			}
+			const random = randomUUID();
 			const tx = await prisma.transaction.create({
 				data: {
 					transactionRequsitionStatus: TransactionRequsitionStatus.REQUESTED_BY_WALLET,
 					transactionStatus: TransactionStatus.CREATED,
 					wallet: {
-						connect: {
-							id: ctx.session.user.selectedBusiness.id,
+						connectOrCreate: {
+							where: {
+								id: walletId,
+							},
+							create: {
+								name: `Created when selecting ${credentialOffer.name}`,
+								slug: random,
+							},
 						},
 					},
 					requsition: {
@@ -84,7 +93,7 @@ export const credentialOfferRouter = router({
 			});
 			return tx;
 		}),
-	issuers: publicProcedure
+	listBy: publicProcedure
 		.input(
 			z.object({
 				requsitionId: z.string(),
@@ -145,7 +154,7 @@ export const credentialOfferRouter = router({
 				nextCursor,
 			};
 		}),
-	list: protectedProcedure
+	listMy: protectedProcedure
 		.input(
 			z
 				.object({

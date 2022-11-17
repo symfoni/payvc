@@ -169,6 +169,7 @@ model Transaction {
   requsition                  Requsition                  @relation(name: "transactionsForRequsition", fields: [requsitionId], references: [id])
   requsitionId                String
   credentialOffer             CredentialOffer?            @relation(name: "CredentialOfferTransactions", fields: [credentialOfferId], references: [id])
+  proof                       String?
 }
 
 model Payment {

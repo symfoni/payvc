@@ -47,17 +47,9 @@ test("flow test", async ({ request, baseURL }) => {
 				provider: { url: "https://eth-goerli.g.alchemy.com/v2/MWv0hh54YO82ISYuwhzpQdn8BbwwheJt" },
 			},
 		],
-		dbName: `issuer-db-${RANDOM_NUMBER}`,
+		dbName: `tmp-issuer-db-${RANDOM_NUMBER}`,
 		walletSecret: "0x1e5b057989b1affaed68d10310a95f28801dd672dac64a4f85748b4432b6c959",
 	});
-	const ISSUER_SERVICE_GET_CREDENTIAL = async (subjectDID: string) => {
-		return issuer.createVC({
-			credentialSubject: {
-				id: subjectDID,
-				phoneNumberNO: "12345678",
-			},
-		});
-	};
 	const ISSUER_APIKEY = "123";
 
 	const issuerAccount = await prisma.user.create({
@@ -71,7 +63,7 @@ test("flow test", async ({ request, baseURL }) => {
 					},
 					create: {
 						name: `Company ${RANDOM_NUMBER} issue inc.`,
-						slug: `${RANDOM_NUMBER}-inc`,
+						slug: `${RANDOM_NUMBER}-issuer-inc`,
 						invoiceInfo: "Postbox ${RANDOM_NUMBER} US",
 						did: issuer.identifier.did,
 						apikey: ISSUER_APIKEY,
@@ -115,7 +107,7 @@ test("flow test", async ({ request, baseURL }) => {
 				provider: { url: "https://eth-goerli.g.alchemy.com/v2/MWv0hh54YO82ISYuwhzpQdn8BbwwheJt" },
 			},
 		],
-		dbName: `issuer-db-${RANDOM_NUMBER}`,
+		dbName: `tmp-verifier-db-${RANDOM_NUMBER}`,
 		walletSecret: "0x04778ccc723afe7762862e6ae6c9793e10f61be537df1e2e7044e6735e38a836",
 	});
 	const VERFIER_APIKEY = "456";
@@ -131,7 +123,7 @@ test("flow test", async ({ request, baseURL }) => {
 					},
 					create: {
 						name: `Company ${RANDOM_NUMBER} verify inc.`,
-						slug: `${RANDOM_NUMBER}-inc`,
+						slug: `${RANDOM_NUMBER}-verify-inc`,
 						invoiceInfo: "Postbox ${RANDOM_NUMBER} US",
 						did: verifier.identifier.did,
 						apikey: VERFIER_APIKEY,
@@ -169,20 +161,26 @@ test("flow test", async ({ request, baseURL }) => {
 					},
 					create: {
 						name: `Company ${RANDOM_NUMBER} Wallet inc.`,
-						slug: `${RANDOM_NUMBER}-inc`,
+						slug: `${RANDOM_NUMBER}-wallet-inc`,
 						invoiceInfo: "PostWallet ${RANDOM_NUMBER} US",
 						apikey: WALLET_APIKEY,
 					},
 				},
 			},
 		},
+		include: {
+			businesses: true,
+		},
 	});
-
+	const t = { baseURL, request };
 	const verifierApp = new VerifierApp({ requsitionId: verifierAccount.businesses[0].requsitions[0].id });
-	const wallet = new Wallet({ apikey: WALLET_APIKEY, email: walletAccount.email });
+	const wallet = new Wallet({ walletId: walletAccount.businesses[0].id });
+	const issuerService = new IssuerService({ apikey: ISSUER_APIKEY, email: issuerAccount.email, issuer: issuer });
 	await verifierApp.userConnectWallet();
-	await verifierApp.requestCredentialFromWallet({ baseURL, request }, wallet);
-
+	const requsitionId = await verifierApp.requestCredentialFromWallet(t, wallet);
+	const tx = await wallet.handleRequsitionRequestFromWallet(t, requsitionId);
+	const vc = await issuerService.handleRequestFromWallet(t, tx);
+	const an = await wallet.handleResponseFromIssuer(t, vc, tx.id);
 	// const verifierApp = {
 	// 	name: "Verifier App",
 	// 	onUserRequestAttestation: async () => {
@@ -212,13 +210,14 @@ class VerifierApp {
 		console.log("Connected to wallet");
 	};
 	requestCredentialFromWallet = async (t: T, wallet: Wallet) => {
-		wallet.handleRequsitionRequestFromWallet(t, this.params.requsitionId);
+		return this.params.requsitionId;
 	};
 }
 
 class Wallet {
 	private transactions: Transaction[] = [];
-	constructor(readonly params: { apikey: string; email: string }) {
+	private vcs: string[] = [];
+	constructor(readonly params: { walletId: string }) {
 		// No body necessary
 	}
 	handleRequsitionRequestFromWallet = async (t: T, requsitionId: string) => {
@@ -229,29 +228,27 @@ class Wallet {
 		expect(json.error).toBeUndefined();
 		expect(json.result.data.json).toBe("yay!");
 
+		// create a client
 		const client = createTRPCProxyClient<AppRouter>({
 			links: [
 				httpBatchLink({
 					url: `${t.baseURL}/api/trpc`,
-					headers() {
-						return {
-							"X-Auth-Key": this.params.apikey,
-							"X-Auth-Email": this.params.email,
-						};
-					},
 				}),
 			],
 			transformer: superjson,
 		});
-		const res = await client.credentialOffer.issuers.query({ requsitionId: requsitionId });
+		const credentialOffersList = await client.credentialOffer.listBy.query({ requsitionId: requsitionId });
 		// get possible issuers from the credential type
-		expect(res.items.length).toBeGreaterThan(0);
-		const selectedCredentialOffer = res.items[0];
+		expect(credentialOffersList.items.length).toBeGreaterThan(0);
+		const selectedCredentialOffer = credentialOffersList.items[0];
 		const tx = await client.credentialOffer.selectIssuer.mutate({
 			credentialOfferId: selectedCredentialOffer.id,
+			requsitionId: requsitionId,
+			walletId: this.params.walletId,
 		});
 		this.transactions.push(tx);
-		return;
+		expect(tx.id).toBeTruthy();
+		return tx;
 		// TODO check for any requirements
 		// Get the crendetial from issuer
 
@@ -264,10 +261,68 @@ class Wallet {
 	*/
 		// lets just mock this by receiving a jwt as
 	};
+	handleResponseFromIssuer = async (t: T, jwt: string, transactionId: string) => {
+		// TODO - Check that the VC is correct
+		// save vc
+
+		// send vc to verifier
+		// VCS - can be sent to
+		/* 
+		- PayVC - Saved in database
+		- Verifier backend
+		- Verifier frontend
+		 */
+		const client = createTRPCProxyClient<AppRouter>({
+			links: [
+				httpBatchLink({
+					url: `${t.baseURL}/api/trpc`,
+				}),
+			],
+			transformer: superjson,
+		});
+		// lets just save this to payvc for now
+		const tx = await client.transaction.verify.mutate({ proof: jwt, transactionId: transactionId });
+		expect(tx.transactionStatus).toBe("FULLFILLED");
+		return true;
+	};
 }
 
 class IssuerService {
-	constructor() {
+	constructor(readonly params: { apikey: string; email: string; issuer: VCIssuer }) {
 		// No body necessary
+	}
+
+	async handleRequestFromWallet(t: T, tx: Transaction) {
+		// create a client
+		const client = createTRPCProxyClient<AppRouter>({
+			links: [
+				httpBatchLink({
+					url: `${t.baseURL}/api/trpc`,
+					headers: {
+						"X-Auth-Key": this.params.apikey,
+						"X-Auth-Email": this.params.email,
+					},
+				}),
+			],
+			transformer: superjson,
+		});
+		const valid = await client.transaction.valid.query({ transactionId: tx.id });
+		expect(valid).toBe(true);
+		const vc = await this.params.issuer.createVC({
+			credentialSubject: {
+				phoneNumberNO: "+4799999999",
+			},
+			issuer: {
+				id: this.params.issuer.identifier.did,
+			},
+			type: ["VerifiableCredential", "PhoneNumberCredential"],
+			"@context": ["https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"],
+		});
+		const fullfilled = await client.transaction.fullfill.mutate({ transactionId: tx.id });
+		expect(fullfilled).toBe(true);
+		return vc.proof.jwt as string;
+		// What is requested
+		// Do attestation
+		// return proof
 	}
 }

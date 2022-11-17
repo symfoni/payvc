@@ -7,10 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "rome check src test",
-    "test": "npx playwright test --project headless",
-    "test:browser": "npx playwright test --project browser",
-    "seed": "tsx ./src/db/seed.ts",
-    "postinstall": "npx playwright install"
+    "test": "playwright test --project headless",
+    "test:browser": "playwright test --project browser",
+    "db:reset": "prisma migrate reset",
+    "db:migrate": "prisma migrate dev",
+    "db:studio": "prisma studio",
+    "db:seed": "tsx ./src/db/seed.ts",
+    "postinstall": "playwright install"
   },
   "dependencies": {
     "@nextui-org/react": "^1.0.0-beta.10",

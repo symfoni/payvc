@@ -5,7 +5,7 @@ import { trpc } from "../utils/trpc";
 interface Props {}
 
 export const CredentialOfferingList: React.FC<Props> = ({ ...props }) => {
-	const { data, isLoading, error } = trpc.credentialOffer.list.useQuery({});
+	const { data, isLoading, error } = trpc.credentialOffer.listMy.useQuery({});
 
 	useEffect(() => {
 		if (!isLoading) {

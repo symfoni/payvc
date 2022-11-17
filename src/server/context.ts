@@ -29,17 +29,17 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
 export type Context = trpc.inferAsyncReturnType<typeof createContext>;
 
 async function getServerSessionFromAPIKey(opts: trpcNext.CreateNextContextOptions): Promise<Session | null> {
-	if (opts.req.headers["X-Auth-Key"] && typeof opts.req.headers["X-Auth-Key"] === "string") {
-		if (opts.req.headers["X-Auth-Email"] && typeof opts.req.headers["X-Auth-Email"] === "string") {
+	if (opts.req.headers["x-auth-key"] && typeof opts.req.headers["x-auth-key"] === "string") {
+		if (opts.req.headers["x-auth-email"] && typeof opts.req.headers["x-auth-email"] === "string") {
 			const business = await prisma.business.findFirst({
 				where: {
-					apikey: opts.req.headers["X-Auth-Key"],
+					apikey: opts.req.headers["x-auth-key"],
 				},
 			});
 			if (business) {
 				const user = await prisma.user.findUnique({
 					where: {
-						email: opts.req.headers["X-Auth-Email"],
+						email: opts.req.headers["x-auth-email"],
 					},
 				});
 				if (user) {
@@ -58,13 +58,13 @@ async function getServerSessionFromAPIKey(opts: trpcNext.CreateNextContextOption
 				} else {
 					throw new TRPCError({
 						code: "UNAUTHORIZED",
-						message: `Did not find user with email ${opts.req.headers["X-Auth-Email"]} for this business.`,
+						message: `Did not find user with email ${opts.req.headers["x-auth-email"]} for this business.`,
 					});
 				}
 			} else {
 				throw new TRPCError({
 					code: "UNAUTHORIZED",
-					message: `Did not find business with apikey ${opts.req.headers["X-Auth-Key"]}.`,
+					message: `Did not find business with apikey ${opts.req.headers["x-auth-key"]}.`,
 				});
 			}
 		} else {
