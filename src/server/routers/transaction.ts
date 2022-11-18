@@ -53,6 +53,7 @@ export const transactionRouter = router({
 					proof: proof,
 					transactionStatus: TransactionStatus.FULLFILLED,
 				},
+
 				select: exposedFields,
 			});
 			if (!transaction) {

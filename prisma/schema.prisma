@@ -124,7 +124,8 @@ model Balance {
   business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
   businessId   String
   payments     Payment[]
-  transactions Transaction[]
+  transactions Transaction[] @relation("BalanceTransactions")
+  logs         String[]
 
   @@unique([currency, businessId], name: "businessCurrency")
 }
@@ -204,8 +205,7 @@ model Transaction {
   credentialOffer             CredentialOffer?            @relation(name: "CredentialOfferTransactions", fields: [credentialOfferId], references: [id])
   proof                       String?
   price                       Int
-  balance                     Balance?                    @relation(fields: [balanceId], references: [id])
-  balanceId                   String?
+  balances                    Balance[]                   @relation("BalanceTransactions")
 }
 
 model Payment {

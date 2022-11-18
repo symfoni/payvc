@@ -9,7 +9,7 @@ import {
 	UserRole,
 } from "@prisma/client";
 import { prisma } from ".";
-import { initiateDeposit, verifyDeposit } from "../server/services/bankService";
+import { fullfillTransfer, initiateDeposit, intiateTransfer, verifyDeposit } from "../server/services/bankService";
 const { execSync } = require("child_process");
 
 async function main() {
@@ -46,6 +46,30 @@ async function main() {
 		},
 	});
 
+	const payVC = await prisma.business.create({
+		data: {
+			name: "PayVC",
+			slug: "payvc",
+			balance: {
+				createMany: {
+					data: [
+						{
+							currency: "ETH",
+							amount: 0,
+						},
+						{
+							currency: "EUR",
+							amount: 0,
+						},
+						{
+							currency: "USD",
+							amount: 0,
+						},
+					],
+				},
+			},
+		},
+	});
 	const jon = await prisma.user.create({
 		data: {
 			id: "1",
@@ -86,12 +110,12 @@ async function main() {
 	if (jon.businesses.length < 1) {
 		throw new Error("jon.businesses.length < 1");
 	}
-	await initiateDeposit(21000, "EUR", jon.businesses[0].id).then((deposit) =>{
+	await initiateDeposit(21000, "EUR", jon.businesses[0].id).then((deposit) => {
 		verifyDeposit(deposit.id);
-   })
-	await initiateDeposit(5000, "EUR", jon.businesses[0].id).then((deposit) =>{
+	});
+	await initiateDeposit(5000, "EUR", jon.businesses[0].id).then((deposit) => {
 		verifyDeposit(deposit.id);
-   })
+	});
 	const robin = await prisma.user.create({
 		data: {
 			id: "2",
@@ -204,12 +228,12 @@ async function main() {
 		},
 	});
 
-	await initiateDeposit(3000, "EUR", alice.businesses[0].id).then((deposit) =>{
-		 verifyDeposit(deposit.id);
-	})
-	await initiateDeposit(1000, "EUR", alice.businesses[0].id).then((deposit) =>{
+	await initiateDeposit(3000, "EUR", alice.businesses[0].id).then((deposit) => {
 		verifyDeposit(deposit.id);
-   })
+	});
+	await initiateDeposit(1000, "EUR", alice.businesses[0].id).then((deposit) => {
+		verifyDeposit(deposit.id);
+	});
 	const boardDirectorRequisition = await prisma.requsition.findFirst({
 		where: {
 			credentialType: {
@@ -248,49 +272,25 @@ async function main() {
 		throw new Error("elon.businesses.length < 1");
 	}
 
-	const tx1 = await prisma.transaction.create({
-		data: {
-			transactionRequsitionStatus: TransactionRequsitionStatus.FULLFILLED,
-			requsition: {
-				connect: {
-					id: boardDirectorRequisition?.id,
-				},
-			},
-			credentialOffer: {
-				connect: {
-					id: nationalIdentityCrendentialOffer?.id,
-				},
-			},
-			price: 100,
-			transactionStatus: TransactionStatus.FULLFILLED,
-			wallet: {
-				connect: {
-					id: elon.businesses[0].id,
-				},
-			},
-		},
+	let tx1 = await intiateTransfer({
+		amount: nationalIdentityCredentialType.price,
+		credentialOfferId: nationalIdentityCrendentialOffer?.id,
+		currency: "EUR",
+		issuerId: nationalIdentityCrendentialOffer.issuerId,
+		requisitionId: boardDirectorRequisition.id,
+		verifierId: boardDirectorRequisition.verifierId,
+		walletId: elon.businesses[0].id,
 	});
-	const tx2 = await prisma.transaction.create({
-		data: {
-			transactionRequsitionStatus: TransactionRequsitionStatus.NEW,
-			requsition: {
-				connect: {
-					id: boardDirectorRequisition?.id,
-				},
-			},
-			credentialOffer: {
-				connect: {
-					id: boardDirectorNOCrendentialOffer?.id,
-				},
-			},
-			price: 300,
-			transactionStatus: TransactionStatus.CREATED,
-			wallet: {
-				connect: {
-					id: elon.businesses[0].id,
-				},
-			},
-		},
+	tx1 = await fullfillTransfer({ transactionId: tx1.id, proof: "JUST TEST" });
+
+	let tx2 = await intiateTransfer({
+		amount: boardDirectorCredentialType.price,
+		credentialOfferId: boardDirectorNOCrendentialOffer?.id,
+		currency: "EUR",
+		issuerId: nationalIdentityCrendentialOffer.issuerId,
+		requisitionId: boardDirectorRequisition.id,
+		verifierId: boardDirectorRequisition.verifierId,
+		walletId: elon.businesses[0].id,
 	});
 
 	console.log("Seeding finished.");
