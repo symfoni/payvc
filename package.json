@@ -9,7 +9,7 @@
     "lint": "rome check src test",
     "test": "playwright test --project headless",
     "test:browser": "playwright test --project browser",
-    "reset": "prisma migrate reset && prisma migrate dev",
+    "reset": "prisma migrate reset && prisma migrate dev && yarn seed",
     "migrate": "prisma migrate dev",
     "studio": "prisma studio",
     "seed": "tsx ./src/db/seed.ts",

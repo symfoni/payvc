@@ -1,12 +1,15 @@
 import {
 	CredentialOfferStatus,
 	ExchangeType,
+	PaymentStatus,
+	PaymentType,
 	TransactionRequsitionStatus,
 	TransactionStatus,
 	User,
 	UserRole,
 } from "@prisma/client";
 import { prisma } from ".";
+import { initiateDeposit, verifyDeposit } from "../server/services/bankService";
 const { execSync } = require("child_process");
 
 async function main() {
@@ -79,9 +82,16 @@ async function main() {
 			businesses: true,
 		},
 	});
+
 	if (jon.businesses.length < 1) {
 		throw new Error("jon.businesses.length < 1");
 	}
+	await initiateDeposit(21000, "EUR", jon.businesses[0].id).then((deposit) =>{
+		verifyDeposit(deposit.id);
+   })
+	await initiateDeposit(5000, "EUR", jon.businesses[0].id).then((deposit) =>{
+		verifyDeposit(deposit.id);
+   })
 	const robin = await prisma.user.create({
 		data: {
 			id: "2",
@@ -89,6 +99,23 @@ async function main() {
 			email: "robin@payvc.xyz",
 			roles: [UserRole.USER, UserRole.ADMIN],
 			businesses: {
+				connect: {
+					id: jon.businesses[0].id,
+				},
+			},
+			selectedBusiness: {
+				connect: {
+					id: jon.businesses[0].id,
+				},
+			},
+		},
+	});
+	await prisma.user.update({
+		where: {
+			id: jon.id,
+		},
+		data: {
+			selectedBusiness: {
 				connect: {
 					id: jon.businesses[0].id,
 				},
@@ -172,7 +199,17 @@ async function main() {
 				},
 			},
 		},
+		include: {
+			businesses: true,
+		},
 	});
+
+	await initiateDeposit(3000, "EUR", alice.businesses[0].id).then((deposit) =>{
+		 verifyDeposit(deposit.id);
+	})
+	await initiateDeposit(1000, "EUR", alice.businesses[0].id).then((deposit) =>{
+		verifyDeposit(deposit.id);
+   })
 	const boardDirectorRequisition = await prisma.requsition.findFirst({
 		where: {
 			credentialType: {
@@ -210,7 +247,30 @@ async function main() {
 	if (elon.businesses.length < 1) {
 		throw new Error("elon.businesses.length < 1");
 	}
-	const tx = await prisma.transaction.create({
+
+	const tx1 = await prisma.transaction.create({
+		data: {
+			transactionRequsitionStatus: TransactionRequsitionStatus.FULLFILLED,
+			requsition: {
+				connect: {
+					id: boardDirectorRequisition?.id,
+				},
+			},
+			credentialOffer: {
+				connect: {
+					id: nationalIdentityCrendentialOffer?.id,
+				},
+			},
+			price: 100,
+			transactionStatus: TransactionStatus.FULLFILLED,
+			wallet: {
+				connect: {
+					id: elon.businesses[0].id,
+				},
+			},
+		},
+	});
+	const tx2 = await prisma.transaction.create({
 		data: {
 			transactionRequsitionStatus: TransactionRequsitionStatus.NEW,
 			requsition: {
@@ -218,6 +278,12 @@ async function main() {
 					id: boardDirectorRequisition?.id,
 				},
 			},
+			credentialOffer: {
+				connect: {
+					id: boardDirectorNOCrendentialOffer?.id,
+				},
+			},
+			price: 300,
 			transactionStatus: TransactionStatus.CREATED,
 			wallet: {
 				connect: {

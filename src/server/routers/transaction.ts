@@ -63,6 +63,43 @@ export const transactionRouter = router({
 			}
 			return transaction;
 		}),
+	listMy: businessAdminProcedure
+		.input(
+			z
+				.object({
+					limit: z.number().min(1).max(100).default(10),
+					cursor: z.string().nullish(),
+				})
+				.default({}),
+		)
+		.query(async ({ input, ctx }) => {
+			const items = await prisma.transaction.findMany({
+				// select: exposedFields,
+				where: {
+					credentialOffer: {
+						issuerId: ctx.session.user.selectedBusiness.id,
+					},
+				},
+				take: input.limit + 1,
+				cursor: input.cursor
+					? {
+							id: input.cursor,
+					  }
+					: undefined,
+				orderBy: {
+					id: "desc",
+				},
+			});
+			let nextCursor: typeof input.cursor | undefined = undefined;
+			if (items.length > input.limit) {
+				const nextItem = items.pop()!;
+				nextCursor = nextItem.id;
+			}
+			return {
+				items: items.reverse(),
+				nextCursor,
+			};
+		}),
 });
 
 const transactionReadyForFullfillment = async (transactionId: string, crendentialOfferId: string) => {

@@ -8,15 +8,8 @@ import { useGlobalState } from "../utils/global-state";
 interface Props {}
 
 export const NavBar: React.FC<Props> = ({ ...props }) => {
-	// BIG in NEXT UI - https://github.com/nextui-org/nextui/issues/763
-	// const MenuLinks = () => (
-	// 	<>
-	// 		<Navbar.Link href="/account">
-	// 			Account
-	// 		</Navbar.Link>
-	// 	</>
-	// );
 	const { data, status } = useSession();
+
 	const MenuLinks = (props: { collapsed?: boolean }) => {
 		const { collapsed } = { collapsed: false, ...props };
 		const router = useRouter();
@@ -31,7 +24,9 @@ export const NavBar: React.FC<Props> = ({ ...props }) => {
 
 				{status === "authenticated" && (
 					<>
-						<Button flat>{data.user.selectedBusiness ? data.user.selectedBusiness.name : "Select business"}</Button>
+						<Button onPress={() => router.push("/account")} flat>
+							{data.user.selectedBusiness ? data.user.selectedBusiness.name : "Select business"}
+						</Button>
 
 						<Dropdown>
 							<Dropdown.Button flat>{data.user.name}</Dropdown.Button>

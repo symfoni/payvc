@@ -17,19 +17,19 @@ export const Sidebar: React.FC<Props> = ({ ...props }) => {
 	const { data, status } = useSession();
 	const MENU_LINKS_SIZE = "sm";
 	const MenuLinks = () => (
-		<Grid.Container gap={1} justify="center">
-			<Grid css={{minWidth: "10rem"}} >
+		<Grid.Container gap={1} alignContent="flex-start" justify="center">
+			<Grid css={{ minWidth: "10rem" }}>
 				<Link href={"/issuer"} passHref>
 					Issuer
 				</Link>
 			</Grid>
-			<Grid  css={{minWidth: "10rem"}}>
+			<Grid css={{ minWidth: "10rem" }}>
 				<Link href="/verifier">Verifier</Link>
 			</Grid>
-			<Grid  css={{minWidth: "10rem"}}>
+			<Grid css={{ minWidth: "10rem" }}>
 				<Link href="/wallet">Wallet</Link>
 			</Grid>
-			<Grid  css={{minWidth: "10rem"}}>
+			<Grid css={{ minWidth: "10rem" }}>
 				<Link href="/settings">Settings</Link>
 			</Grid>
 		</Grid.Container>

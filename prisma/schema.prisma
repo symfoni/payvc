@@ -34,6 +34,20 @@ enum TransactionStatus {
   FULLFILLED
 }
 
+enum PaymentType {
+  DEPOSIT
+  WITHDRAWAL
+  REFUND
+  CREDIT
+}
+
+enum PaymentStatus {
+  CREATED
+  VERIFYING
+  COMPLETED
+  IN_TRANSIT
+}
+
 enum TransactionRequsitionStatus {
   NEW
   REQUESTED_BY_USER
@@ -46,6 +60,12 @@ enum TransactionRequsitionStatus {
 
 enum ExchangeType {
   WEB
+}
+
+enum Currency {
+  EUR
+  USD
+  ETH
 }
 
 model Account {
@@ -97,6 +117,18 @@ model VerificationToken {
   @@unique([identifier, token])
 }
 
+model Balance {
+  id           String        @id @default(cuid())
+  amount       Int
+  currency     Currency
+  business     Business      @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  businessId   String
+  payments     Payment[]
+  transactions Transaction[]
+
+  @@unique([currency, businessId], name: "businessCurrency")
+}
+
 // A business e.g. BR
 model Business {
   id               String            @id @default(cuid())
@@ -111,6 +143,7 @@ model Business {
   credentialOffers CredentialOffer[]
   requsitions      Requsition[]      @relation(name: "verifierRequsitions")
   selectedByUsers  User[]
+  balance          Balance[]
 }
 
 model CredentialType {
@@ -171,6 +204,8 @@ model Transaction {
   credentialOffer             CredentialOffer?            @relation(name: "CredentialOfferTransactions", fields: [credentialOfferId], references: [id])
   proof                       String?
   price                       Int
+  balance                     Balance?                    @relation(fields: [balanceId], references: [id])
+  balanceId                   String?
 }
 
 model Payment {
@@ -181,15 +216,6 @@ model Payment {
   status     PaymentStatus
   business   Business      @relation(fields: [businessId], references: [id])
   businessId String
-}
-
-enum PaymentType {
-  TOBANKACCOUNT
-  PREFILL
-  REFUND
-}
-
-enum PaymentStatus {
-  VERIFYING
-  COMPLETED
+  balance    Balance?      @relation(fields: [balanceId], references: [id])
+  balanceId  String?
 }

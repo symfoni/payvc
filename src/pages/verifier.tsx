@@ -3,6 +3,7 @@ import { Button, Card, Container, Grid, Row, Spacer, Text } from "@nextui-org/re
 import { CredentialOfferingList } from "../components/CredentialOfferingList";
 import { PaymentList } from "../components/PaymentList";
 import { TransactionList } from "../components/TransactionList";
+import { RequsitionList } from "../components/RequsitionList";
 
 interface Props {}
 
@@ -12,11 +13,11 @@ export const issuer: React.FC<Props> = ({ ...props }) => {
 			<Grid xs={12} sm={6}>
 				<Card>
 					<Card.Header>
-						<Text b>Credential offerings</Text>
+						<Text b>Requsitions</Text>
 					</Card.Header>
 					<Card.Divider />
 					<Card.Body css={{ py: "$10" }}>
-						<CredentialOfferingList></CredentialOfferingList>
+						<RequsitionList></RequsitionList>
 					</Card.Body>
 					<Card.Divider />
 					<Card.Footer>

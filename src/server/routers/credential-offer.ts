@@ -9,6 +9,7 @@ import { z } from "zod";
 import { prisma, Prisma } from "../../db";
 import { CredentialOfferStatus, TransactionRequsitionStatus, TransactionStatus } from "@prisma/client";
 import { randomUUID } from "crypto";
+import { intiateTransfer } from "../services/bankService";
 
 /**
  * Default selector for Post.
@@ -76,33 +77,28 @@ export const credentialOfferRouter = router({
 				});
 			}
 			const random = randomUUID();
-			const tx = await prisma.transaction.create({
-				data: {
-					transactionRequsitionStatus: TransactionRequsitionStatus.REQUESTED_BY_WALLET,
-					transactionStatus: TransactionStatus.CREATED,
-					price: credentialOffer.credentialType.requsitions[0].price,
-					wallet: {
-						connectOrCreate: {
-							where: {
-								id: walletId,
-							},
-							create: {
-								name: `Created when selecting ${credentialOffer.name}`,
-								slug: random,
-							},
-						},
-					},
-					requsition: {
-						connect: {
-							id: requsitionId,
-						},
-					},
-					credentialOffer: {
-						connect: {
-							id: credentialOffer.id,
-						},
-					},
+			let wallet = await prisma.business.findUnique({
+				where: {
+					id: walletId,
 				},
+			});
+			if (!wallet) {
+				wallet = await prisma.business.create({
+					data: {
+						id: walletId,
+						name: `Created when selecting ${credentialOffer.name}`,
+						slug: random,
+					},
+				});
+			}
+			const tx = await intiateTransfer({
+				amount: credentialOffer.credentialType.requsitions[0].price,
+				currency: "EUR",
+				walletId: wallet.id,
+				credentialOfferId: credentialOffer.id,
+				requisitionId: credentialOffer.credentialType.requsitions[0].id,
+				issuerId: credentialOffer.issuerId,
+				verifierId: credentialOffer.credentialType.requsitions[0].verifierId,
 			});
 			return tx;
 		}),
@@ -195,13 +191,15 @@ export const credentialOfferRouter = router({
 				},
 				include: {
 					transactions: {
-						where: {
-							transactionRequsitionStatus: TransactionRequsitionStatus.FULLFILLED,
+						// where: {
+						// 	transactionRequsitionStatus: TransactionRequsitionStatus.FULLFILLED,
+						// },
+						select: {
+							price: true,
 						},
 					},
 				},
 			});
-			console.log("items.length ", items.length);
 			let nextCursor: typeof input.cursor | undefined = undefined;
 			if (items.length > input.limit) {
 				const nextItem = items.pop()!;
