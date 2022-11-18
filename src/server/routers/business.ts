@@ -63,7 +63,7 @@ export const businessRouter = router({
 				const nextItem = items.pop()!;
 				nextCursor = nextItem.id;
 			}
-
+			console.log(items);
 			return {
 				items: items.reverse(),
 				nextCursor,

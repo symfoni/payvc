@@ -1,9 +1,10 @@
-import { Avatar, Button, Dropdown, Grid, Navbar, Text, Link as UiLink } from "@nextui-org/react";
+import { Button, Dropdown, Grid, Navbar, Text } from "@nextui-org/react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import React, { useEffect } from "react";
-import { useGlobalState } from "../utils/global-state";
+import React from "react";
+import { trpc } from "../utils/trpc";
+import { DropdownMenuSelectBusiness } from "./DropdownMenuSelectBusiness";
 
 interface Props {}
 
@@ -12,6 +13,7 @@ export const NavBar: React.FC<Props> = ({ ...props }) => {
 
 	const MenuLinks = (props: { collapsed?: boolean }) => {
 		const { collapsed } = { collapsed: false, ...props };
+
 		const router = useRouter();
 
 		return (
@@ -22,11 +24,19 @@ export const NavBar: React.FC<Props> = ({ ...props }) => {
 					</Button>
 				)}
 
-				{status === "authenticated" && (
+				{status === "authenticated" && data.user.selectedBusiness && (
 					<>
-						<Button onPress={() => router.push("/account")} flat>
-							{data.user.selectedBusiness ? data.user.selectedBusiness.name : "Select business"}
-						</Button>
+						<div>
+							<Dropdown>
+								<Dropdown.Button flat>
+									{data.user.selectedBusiness ? data.user.selectedBusiness.name : "Select business"}
+								</Dropdown.Button>
+								{/* <DropdownMenuSelectBusiness selectedBusinessId={"gdg"}></DropdownMenuSelectBusiness> */}
+								<Dropdown.Menu>
+									<Dropdown.Item>Business 1</Dropdown.Item>
+								</Dropdown.Menu>
+							</Dropdown>
+						</div>
 
 						<Dropdown>
 							<Dropdown.Button flat>{data.user.name}</Dropdown.Button>

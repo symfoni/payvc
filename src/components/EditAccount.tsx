@@ -1,6 +1,6 @@
-import { Badge, Button, Grid, Input, Spacer, Spinner, Text } from "@nextui-org/react";
+import { Badge, Button, Dropdown, Grid, Input, Spacer, Spinner, Text } from "@nextui-org/react";
 import React, { useState } from "react";
-import { AccountSelectBusiness } from "../components/AccountSelectBusiness";
+import { DropdownMenuSelectBusiness } from "./DropdownMenuSelectBusiness";
 import { trpc } from "../utils/trpc";
 
 interface Props {}
@@ -83,7 +83,16 @@ export const EditAccount: React.FC<Props> = ({ ...props }) => {
 						</Badge>
 					))}
 				</Grid>
-				<Grid xs={12}>{account.roles.includes("ADMIN") && <AccountSelectBusiness></AccountSelectBusiness>}</Grid>
+				<Grid xs={12}>
+					{account.roles.includes("ADMIN") && (
+						<Dropdown>
+							<Dropdown.Button flat>
+								{account.selectedBusiness ? account.selectedBusiness.name : "Select business"}
+							</Dropdown.Button>
+							<DropdownMenuSelectBusiness selectedBusinessId={account.selectedBusiness.id}></DropdownMenuSelectBusiness>
+						</Dropdown>
+					)}
+				</Grid>
 			</Grid.Container>
 		);
 	}
