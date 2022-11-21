@@ -37,7 +37,7 @@ async function main() {
 	const boardDirectorCredentialType = await prisma.credentialType.create({
 		data: {
 			name: "BoardDirectorNO",
-			price: 800,
+			price: 900,
 		},
 	});
 	const exchangeTypeWeb = await prisma.credentialExchange.create({
@@ -110,12 +110,12 @@ async function main() {
 	if (jon.businesses.length < 1) {
 		throw new Error("jon.businesses.length < 1");
 	}
-	await initiateDeposit(21000, "EUR", jon.businesses[0].id).then((deposit) => {
-		verifyDeposit(deposit.id);
-	});
-	await initiateDeposit(5000, "EUR", jon.businesses[0].id).then((deposit) => {
-		verifyDeposit(deposit.id);
-	});
+	// await initiateDeposit(20000, "EUR", jon.businesses[0].id).then((deposit) => {
+	// 	verifyDeposit(deposit.id);
+	// });
+	// await initiateDeposit(5000, "EUR", jon.businesses[0].id).then((deposit) => {
+	// 	verifyDeposit(deposit.id);
+	// });
 	const robin = await prisma.user.create({
 		data: {
 			id: "2",
@@ -168,7 +168,7 @@ async function main() {
 					credentialOffers: {
 						create: {
 							name: "BoardDirectorNO",
-							price: 800,
+							price: 500,
 							status: CredentialOfferStatus.WAITING_APPROVAL,
 							credentialType: {
 								connect: {
@@ -212,7 +212,7 @@ async function main() {
 					did: "did:ethr:0x345",
 					requsitions: {
 						create: {
-							price: boardDirectorNOCrendentialOffer.price,
+							price: boardDirectorCredentialType.price,
 							credentialType: {
 								connect: {
 									name: boardDirectorCredentialType.name,

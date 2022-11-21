@@ -30,7 +30,7 @@ export const Sidebar: React.FC<Props> = ({ ...props }) => {
 				<Link href="/wallet">Wallet</Link>
 			</Grid>
 			<Grid css={{ minWidth: "10rem" }}>
-				<Link href="/settings">Settings</Link>
+				<Link href="/admin">Admin</Link>
 			</Grid>
 		</Grid.Container>
 	);

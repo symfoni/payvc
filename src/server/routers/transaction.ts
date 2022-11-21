@@ -77,9 +77,23 @@ export const transactionRouter = router({
 			const items = await prisma.transaction.findMany({
 				// select: exposedFields,
 				where: {
-					credentialOffer: {
-						issuerId: ctx.session.user.selectedBusiness.id,
-					},
+					OR: [
+						{
+							credentialOffer: {
+								issuerId: ctx.session.user.selectedBusiness.id,
+							},
+						},
+						{
+							requsition: {
+								verifierId: ctx.session.user.selectedBusiness.id,
+							},
+						},
+						{
+							walletId: {
+								equals: ctx.session.user.selectedBusiness.id,
+							},
+						},
+					],
 				},
 				take: input.limit + 1,
 				cursor: input.cursor

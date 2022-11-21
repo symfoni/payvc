@@ -1,11 +1,10 @@
-import { test, expect, APIRequestContext } from "@playwright/test";
+import { APIRequestContext, expect, test } from "@playwright/test";
 import { CredentialOfferStatus, ExchangeType, Transaction } from "@prisma/client";
-import { prisma } from "../../src/db";
 import { VCIssuer } from "@symfoni/vc-tools";
-import type { AppRouter } from "../../src/server/routers/_app";
-import { createTRPCNext } from "@trpc/next";
-import { createTRPCProxyClient, httpBatchLink, httpLink } from "@trpc/client";
+import { createTRPCProxyClient, httpBatchLink } from "@trpc/client";
 import superjson from "superjson";
+import { prisma } from "../../src/db";
+import type { AppRouter } from "../../src/server/routers/_app";
 
 type T = {
 	baseURL: string;

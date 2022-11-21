@@ -4,20 +4,15 @@ import { CredentialOfferingList } from "../components/CredentialOfferingList";
 import { PaymentList } from "../components/PaymentList";
 import { TransactionList } from "../components/TransactionList";
 import { BalanceList } from "../components/BalanceList";
-import { BalancesCard } from "../components/BalancesCard";
 import { TransactionCard } from "../components/TransactionCard";
+import { BalancesCard } from "../components/BalancesCard";
 import { PaymentsCard } from "../components/PaymentsCard";
-import { CredentialOfferingsCard } from "../components/CredentialOfferingsCard";
 
 interface Props {}
 
 export const issuer: React.FC<Props> = ({ ...props }) => {
 	return (
 		<Grid.Container gap={1}>
-			<Grid xs={12} sm={6}>
-				<CredentialOfferingsCard></CredentialOfferingsCard>
-			</Grid>
-
 			<Grid xs={12} sm={6}>
 				<PaymentsCard></PaymentsCard>
 			</Grid>
