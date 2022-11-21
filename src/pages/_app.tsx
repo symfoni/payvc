@@ -17,9 +17,10 @@ type AppPropsWithLayout = AppProps & {
 };
 
 const MyApp = (({ Component, pageProps }: AppPropsWithLayout) => {
-	const getLayout = Component.getLayout ?? ((page) => <DefaultLayout>{page}</DefaultLayout>);
+	const getLayout =
+		Component.getLayout ?? ((page) => <DefaultLayout session={pageProps.session}>{page}</DefaultLayout>);
 
-	return <SessionProvider session={pageProps.session}>{getLayout(<Component {...pageProps} />)}</SessionProvider>;
+	return getLayout(<Component {...pageProps} />);
 }) as AppType;
 
 export default trpc.withTRPC(MyApp);
