@@ -26,13 +26,19 @@
     "moduleResolution": "node",
     "noUnusedLocals": false,
     "noUnusedParameters": false,
-    "preserveWatchOutput": true
+    "preserveWatchOutput": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
-    "tsup.config.ts"
+    "tsup.config.ts",
+    ".next/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

@@ -1,9 +1,8 @@
 import { Button, Dropdown, Grid, Navbar, Text } from "@nextui-org/react";
 import { signIn, signOut, useSession } from "next-auth/react";
 import Link from "next/link";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React from "react";
-import { trpc } from "../utils/trpc";
 import { DropdownMenuSelectBusiness } from "./DropdownMenuSelectBusiness";
 
 interface Props {}

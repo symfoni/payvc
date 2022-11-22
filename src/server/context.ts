@@ -5,12 +5,7 @@ import * as trpcNext from "@trpc/server/adapters/next";
 import { Session, unstable_getServerSession } from "next-auth";
 import { NEXT_AUTH_OPTIONS } from "../pages/api/auth/[...nextauth]";
 
-/**
- * Creates context for an incoming request
- * @link https://trpc.io/docs/context
- */
 export async function createContext(opts: trpcNext.CreateNextContextOptions) {
-	// for API-response caching see https://trpc.io/docs/caching
 	// Dont require session for healthcheck
 	if (opts.req.url === "/api/trpc/healthcheck") {
 		return {};

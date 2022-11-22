@@ -1,8 +1,7 @@
 import { Dropdown, Grid, Spinner } from "@nextui-org/react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import React from "react";
-import { router } from "../server/trpc";
-import { trpc } from "../utils/trpc";
+import { trpc } from "../client/trpc";
 
 interface Props {
 	selectedBusinessId: string;
@@ -22,7 +21,7 @@ export const DropdownMenuSelectBusiness: React.FC<Props> = ({ ...props }) => {
 				aria-label="Add business to account"
 				onAction={(key: string) => {
 					updateUser.mutateAsync({ addBusiness: key.toString(), selectedBusinessId: key.toString() });
-					router.reload();
+					router.push("/dashboard");
 				}}
 			>
 				{data.items.map((business) => (

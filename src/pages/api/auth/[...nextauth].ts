@@ -6,7 +6,6 @@ import { PayVCPrismaAdapter } from "../../../server/next-auth-prisma-adapter";
 import CredentialsProvider from "next-auth/providers/credentials";
 
 export const NEXT_AUTH_OPTIONS: NextAuthOptions = {
-	// Configure one or more authentication providers
 	providers: [
 		// GithubProvider({
 		//     clientId: process.env.GITHUB_ID,

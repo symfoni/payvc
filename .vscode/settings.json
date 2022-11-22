@@ -1,10 +1,12 @@
 {
-    "editor.defaultFormatter": "rome.rome",
-    "[typescriptreact]": {
-        "editor.defaultFormatter": "rome.rome",
-    },
-    "[prisma]": {
-        "editor.defaultFormatter": "Prisma.prisma",
-    },
-    "editor.formatOnSave": true
+  "editor.defaultFormatter": "rome.rome",
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "rome.rome"
+  },
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+  "editor.formatOnSave": true,
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }

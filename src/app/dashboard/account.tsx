@@ -1,6 +1,6 @@
 import { Text } from "@nextui-org/react";
 import React from "react";
-import { EditAccount } from "../components/EditAccount";
+import { EditAccount } from "../../components/EditAccount";
 
 interface Props {}
 
