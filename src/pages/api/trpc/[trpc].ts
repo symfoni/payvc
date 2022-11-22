@@ -29,7 +29,17 @@ export default trpcNext.createNextApiHandler({
 	/**
 	 * @link https://trpc.io/docs/caching#api-response-caching
 	 */
-	// responseMeta() {
-	//   // ...
-	// },
+
+	responseMeta() {
+		// TODO - unsafe
+		return {
+			headers: {
+				"Access-Control-Allow-Origin": "*",
+				"Access-Control-Allow-Methods": "POST, PUT, DELETE, GET, OPTIONS",
+				"Access-Control-Allow-Headers": "*",
+				"Access-Control-Request-Method": "*",
+			},
+			status: 200,
+		};
+	},
 });

@@ -12,6 +12,11 @@ import { NEXT_AUTH_OPTIONS } from "../pages/api/auth/[...nextauth]";
 export async function createContext(opts: trpcNext.CreateNextContextOptions) {
 	// for API-response caching see https://trpc.io/docs/caching
 	// Dont require session for healthcheck
+
+	if (opts.req.method === "OPTIONS") {
+		opts.res.writeHead(200);
+		return opts.res.end();
+	}
 	if (opts.req.url === "/api/trpc/healthcheck") {
 		return {};
 	}
