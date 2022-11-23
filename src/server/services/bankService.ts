@@ -302,6 +302,28 @@ export async function intiateTransfer(params: {
 				],
 			},
 		},
+		include: {
+			credentialOffer: {
+				include: {
+					issuer: true,
+					credentialType: true,
+					exchange: true,
+					parentRequirement: {
+						include: {
+							credentialType: true,
+							issuer: true,
+						},
+					},
+					requirements: true,
+				},
+			},
+			requsition: {
+				include: {
+					verifier: true,
+					credentialType: true,
+				},
+			},
+		},
 	});
 	return tx;
 }

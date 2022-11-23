@@ -10,6 +10,7 @@ import { prisma, Prisma } from "../../db";
 import { CredentialOfferStatus, TransactionRequsitionStatus, TransactionStatus } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { intiateTransfer } from "../services/bankService";
+import { VCIssuer } from "@symfoni/vc-tools";
 
 /**
  * Default selector for Post.
@@ -102,6 +103,61 @@ export const credentialOfferRouter = router({
 			});
 			return tx;
 		}),
+	issueCredentialTest: publicProcedure
+		.input(
+			z.object({
+				slug: z.string(),
+				phone: z.string(),
+			}),
+		)
+		.query(async ({ input, ctx }) => {
+			const issuer = await VCIssuer.init({
+				chains: [
+					{
+						chainId: 5,
+						default: true,
+						provider: {
+							url: "https://eth-goerli.g.alchemy.com/v2/MWv0hh54YO82ISYuwhzpQdn8BbwwheJt",
+						},
+					},
+				],
+				dbName: `issuer-${input.slug}`,
+				walletSecret: "0xc3c2ccfc2adec51ca4a441714f01db02095c0ea7450664cd00d3787a0d4e1839", // 0xdddD62cA4f31F34d9beE49B07717a920DCCEa949
+			});
+			const credential = await issuer.createVC({
+				type: ["VerifiableCredential", "PhoneCredential"],
+				credentialSubject: {
+					phoneNumber: input.phone,
+				},
+				"@context": ["https://www.w3.org/2018/credentials/v1", "https://www.w3.org/2018/credentials/examples/v1"],
+				issuer: (await issuer).identifier.did,
+				expirationDate: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365).toISOString(),
+			});
+			return credential.proof.jwt as string;
+		}),
+	get: publicProcedure
+		.input(
+			z.object({
+				slug: z.string(),
+			}),
+		)
+		.query(async ({ input, ctx }) => {
+			const credentialOffer = await prisma.credentialOffer.findMany({
+				where: {
+					issuer: {
+						slug: input.slug,
+					},
+				},
+				select: exposedFields,
+			});
+			if (!credentialOffer) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "Credential offer not found",
+				});
+			}
+			return credentialOffer;
+		}),
 	listBy: publicProcedure
 		.input(
 			z.object({
@@ -131,6 +187,15 @@ export const credentialOfferRouter = router({
 							some: {
 								id: requsition.id,
 							},
+						},
+					},
+				},
+				include: {
+					issuer: true,
+					parentRequirement: {
+						include: {
+							credentialType: true,
+							issuer: true,
 						},
 					},
 				},

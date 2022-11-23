@@ -169,7 +169,7 @@ async function main() {
 						create: {
 							name: "BoardDirectorNO",
 							price: 500,
-							status: CredentialOfferStatus.WAITING_APPROVAL,
+							status: CredentialOfferStatus.APPROVED,
 							credentialType: {
 								connect: {
 									name: boardDirectorCredentialType.name,
@@ -213,6 +213,7 @@ async function main() {
 					requsitions: {
 						create: {
 							price: boardDirectorCredentialType.price,
+							id: "req1",
 							credentialType: {
 								connect: {
 									name: boardDirectorCredentialType.name,

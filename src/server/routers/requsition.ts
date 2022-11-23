@@ -23,6 +23,21 @@ const exposedFields = Prisma.validator<Prisma.RequsitionSelect>()({
 });
 
 export const requsitionRouter = router({
+	get: publicProcedure.input(z.object({ id: z.string() })).query(async ({ input, ctx }) => {
+		const requsition = await prisma.requsition.findUnique({
+			where: {
+				id: input.id,
+			},
+			select: exposedFields,
+		});
+		if (!requsition) {
+			throw new TRPCError({
+				code: "NOT_FOUND",
+				message: "Could not find requsition",
+			});
+		}
+		return requsition;
+	}),
 	listMy: businessAdminProcedure
 		.input(
 			z
