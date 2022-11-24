@@ -38,6 +38,32 @@ export const requsitionRouter = router({
 		}
 		return requsition;
 	}),
+	getAll: publicProcedure
+		.input(
+			z.object({
+				slug: z.string(),
+			}),
+		)
+		.query(async ({ input, ctx }) => {
+			const requisition = await prisma.requsition.findMany({
+				where: {
+					verifier: {
+						slug: input.slug,
+					},
+				},
+				include: {
+					credentialType: true,
+					verifier: true,
+				},
+			});
+			if (!requisition) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "Credential offer not found",
+				});
+			}
+			return requisition;
+		}),
 	listMy: businessAdminProcedure
 		.input(
 			z
