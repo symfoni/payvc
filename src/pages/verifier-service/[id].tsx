@@ -19,9 +19,12 @@ const IssuerPage: React.FC<Props> = ({ ...props }) => {
 		},
 		{ retry: false },
 	);
-	const { init, connect, client, session } = useWalletConnect();
+	const { init, connect, client, session, disconnect } = useWalletConnect();
 	const [mySession, setMySession] = useState<SessionTypes.Struct>();
 	const [myClient, setMyClient] = useState<SignClient>();
+	const [transactionID, setTransactionID] = useState<string>();
+	const verify = trpc.transaction.verify.useMutation({});
+	const [success, setSuccess] = useState(false);
 
 	useEffect(() => {
 		init(`Verifier ${slug}`, `Verifier service for ${slug}`, `${router.asPath}`);
@@ -43,51 +46,61 @@ const IssuerPage: React.FC<Props> = ({ ...props }) => {
 		return <Text>{error.message}</Text>;
 	}
 
-	async function presentNationalIdentityCredential() {
+	async function requestCredential(requisitionId: string) {
 		if (!myClient) {
 			throw new Error("signClient not initialized");
 		}
-		if (!session) {
+		if (!mySession) {
 			throw new Error("session not initialized");
 		}
-		console.log("presentNationalIdentityCredential ");
-		const result = await myClient.request({
-			topic: session.topic,
-			chainId: "eip155:5",
-			request: {
-				method: "present_credential",
-				params: ["NationalIdentityNO"],
-			},
-		});
-		console.log(result);
-		if (typeof result[0] !== "string") {
-			throw new Error("Expected jwt from present_credential");
-		}
-		const jwt = result[0] as string;
-		const verifier = await VCVerifier.init({
-			chains: [
-				{
-					chainId: 5,
-					default: true,
-					provider: {
-						url: "https://eth-goerli.g.alchemy.com/v2/MWv0hh54YO82ISYuwhzpQdn8BbwwheJt",
-					},
+		let _transactionId = undefined;
+		let valid = false;
+		try {
+			_transactionId = await myClient.request<string>({
+				topic: mySession!.topic,
+				chainId: "eip155:5",
+				request: {
+					method: "request_credential",
+					params: [requisitionId],
 				},
-			],
-			dbName: `verifier-${slug}`,
-			walletSecret: "0xc3c2ccfc2adec51ca4a441714f01db02095c0ea7450664cd00d3787a0d4e1839", // 0xdddD62cA4f31F34d9beE49B07717a920DCCEa949
-		});
-		const verifyResult = await verifier.verifyVC({
-			credential: jwt,
-			policies: {
-				audience: false,
-				expiry: false,
-			},
-		});
-		if (!verifyResult.verified) {
-			throw new Error("Verification failed");
+			});
+			valid = true;
+		} catch (e) {
+			valid = false;
 		}
-		console.log(verifyResult.verifiableCredential.credentialSubject.nationalIdentityNO);
+		if (!_transactionId) {
+			throw Error("No transactionId returned");
+		}
+		setTransactionID(_transactionId);
+	}
+	async function presentCredential(credentialName: string) {
+		if (!myClient) {
+			throw new Error("signClient not initialized");
+		}
+		if (!mySession) {
+			throw new Error("session not initialized");
+		}
+		let vp = undefined;
+		let valid = false;
+		try {
+			vp = await myClient.request<string>({
+				topic: mySession!.topic,
+				chainId: "eip155:5",
+				request: {
+					method: "presentCredential",
+					params: [credentialName],
+				},
+			});
+			valid = true;
+		} catch (e) {
+			valid = false;
+		}
+		if (!vp) {
+			throw Error("No vp returned");
+		}
+		const verified = await verify.mutateAsync({ proof: vp, transactionId: transactionID });
+		console.log("verified", verified);
+		setSuccess(true);
 	}
 
 	return (
@@ -96,7 +109,7 @@ const IssuerPage: React.FC<Props> = ({ ...props }) => {
 				<Col>
 					<Text h2>Verifier Service</Text>
 					{!mySession && <Button onPress={() => connect()}>Connect</Button>}
-					{myClient && <Button onPress={() => presentNationalIdentityCredential()}>Test</Button>}
+					{mySession && <Button onPress={() => disconnect()}>Disconnect</Button>}
 					<Spacer />
 					{data?.map((req) => (
 						<Card key={req.id}>
@@ -105,6 +118,28 @@ const IssuerPage: React.FC<Props> = ({ ...props }) => {
 									h3
 								>{`${req.verifier.name} is requesting ${req.credentialType.name} to perform their service`}</Text>
 							</Card.Header>
+							<Card.Body>
+								<Button
+									onPress={() => requestCredential(req.id)}
+								>{`Reqeust ${req.credentialType.name} credential`}</Button>
+								<Spacer></Spacer>
+								{transactionID && (
+									<>
+										<Text>{`Transaction ID: ${transactionID}`}</Text>
+										<Spacer></Spacer>
+									</>
+								)}
+								<Button
+									onPress={() => presentCredential(req.credentialType.name)}
+								>{`Present ${req.credentialType.name} credential`}</Button>
+							</Card.Body>
+							{success && (
+								<Card.Footer>
+									<Text h3 color="green">
+										{"Complete"}
+									</Text>
+								</Card.Footer>
+							)}
 						</Card>
 					))}
 				</Col>

@@ -73,6 +73,7 @@ export const requsitionRouter = router({
 				})
 				.default({}),
 		)
+		.output(z.object({ items: z.array(z.any()), cursor: z.string().nullish() }))
 		.query(async ({ input, ctx }) => {
 			const items = await prisma.requsition.findMany({
 				where: {

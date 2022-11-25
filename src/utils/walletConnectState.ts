@@ -11,6 +11,7 @@ export interface GlobalState {
 	session: SessionTypes.Struct | undefined;
 	init: (name: string, description: string, url: string) => void;
 	connect: () => void;
+	disconnect: () => void;
 }
 export const useWalletConnect = create<GlobalState>()(
 	persist(
@@ -43,6 +44,20 @@ export const useWalletConnect = create<GlobalState>()(
 					return { client: client, initialized: true };
 				});
 			},
+			disconnect: async () => {
+				const client = get().client;
+				const session = get().session;
+				await client.disconnect({
+					reason: {
+						code: 0,
+						message: "Disconnected from client",
+					},
+					topic: session.topic,
+				});
+				return set((state) => {
+					return { session: undefined };
+				});
+			},
 			connect: async () => {
 				let session = undefined;
 				try {
@@ -55,7 +70,7 @@ export const useWalletConnect = create<GlobalState>()(
 						// Provide the namespaces and chains (e.g. `eip155` for EVM-based chains) we want to use in this session.
 						requiredNamespaces: {
 							eip155: {
-								methods: ["eth_sign", "present_credential", "receive_credential"],
+								methods: ["request_credential", "present_credential", "receive_credential"],
 								chains: ["eip155:5"],
 								events: [],
 							},
@@ -79,7 +94,7 @@ export const useWalletConnect = create<GlobalState>()(
 			},
 		}),
 		{
-			name: "wallet-connect-store",
+			name: "wc-store",
 			partialize: (state) => ({ session: state.session }),
 		},
 	),
