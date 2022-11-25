@@ -23,7 +23,7 @@ const IssuerPage: React.FC<Props> = ({ ...props }) => {
 	const [mySession, setMySession] = useState<SessionTypes.Struct>();
 	const [myClient, setMyClient] = useState<SignClient>();
 	const [transactionID, setTransactionID] = useState<string>();
-	const verify = trpc.transaction.verify.useMutation({});
+	// const verify = trpc.transaction.verify.useMutation({});
 	const [success, setSuccess] = useState(false);
 
 	useEffect(() => {
@@ -98,8 +98,8 @@ const IssuerPage: React.FC<Props> = ({ ...props }) => {
 		if (!vp) {
 			throw Error("No vp returned");
 		}
-		const verified = await verify.mutateAsync({ proof: vp, transactionId: transactionID });
-		console.log("verified", verified);
+		// const verified = await verify.mutateAsync({ proof: vp, transactionId: transactionID });
+		// console.log("verified", verified);
 		setSuccess(true);
 	}
 

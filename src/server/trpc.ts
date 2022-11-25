@@ -14,19 +14,23 @@ import superjson from "superjson";
 import { z } from "zod";
 import { Business } from "@prisma/client";
 import { Session, SessionWithSelectedBusiness } from "next-auth";
+import { OpenApiMeta } from "trpc-openapi";
 
-const t = initTRPC.context<Context>().create({
-	/**
-	 * @see https://trpc.io/docs/v10/data-transformers
-	 */
-	transformer: superjson,
-	/**
-	 * @see https://trpc.io/docs/v10/error-formatting
-	 */
-	errorFormatter({ shape }) {
-		return shape;
-	},
-});
+const t = initTRPC
+	.context<Context>()
+	.meta<OpenApiMeta>()
+	.create({
+		/**
+		 * @see https://trpc.io/docs/v10/data-transformers
+		 */
+		transformer: superjson,
+		/**
+		 * @see https://trpc.io/docs/v10/error-formatting
+		 */
+		errorFormatter({ shape }) {
+			return shape;
+		},
+	});
 
 /**
  * Reusable middleware that checks if users are admin of the given business
