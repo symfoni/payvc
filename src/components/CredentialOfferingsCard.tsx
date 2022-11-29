@@ -17,7 +17,9 @@ export const CredentialOfferingsCard: React.FC<Props> = ({ ...props }) => {
 			<Card.Divider />
 			<Card.Footer>
 				<Row justify="flex-end">
-					<Button size="sm">Create credential offering</Button>
+					<Button as={"a"} size="sm" href="/create-credential-offer">
+						Create credential offering
+					</Button>
 				</Row>
 			</Card.Footer>
 		</Card>

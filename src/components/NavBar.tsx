@@ -31,7 +31,7 @@ export const NavBar: React.FC<Props> = ({ ...props }) => {
 								<Dropdown.Button flat>
 									{data.user.selectedBusiness ? data.user.selectedBusiness.name : "Select business"}
 								</Dropdown.Button>
-								<DropdownMenuSelectBusiness selectedBusinessId={"gdg"}></DropdownMenuSelectBusiness>
+								<DropdownMenuSelectBusiness selectedBusinessId={"TODO"}></DropdownMenuSelectBusiness>
 							</Dropdown>
 						</div>
 

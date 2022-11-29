@@ -7,7 +7,7 @@ import { router, publicProcedure, protectedProcedure, businessAdminProcedure } f
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { prisma, Prisma } from "../../db";
-import { CredentialOfferStatus, TransactionRequsitionStatus, TransactionStatus } from "@prisma/client";
+import { CredentialOfferStatus, ExchangeType, TransactionRequsitionStatus, TransactionStatus } from "@prisma/client";
 import { randomUUID } from "crypto";
 import { intiateTransfer } from "../services/bankService";
 import { VCIssuer } from "@symfoni/vc-tools";
@@ -28,6 +28,50 @@ const exposedFields = Prisma.validator<Prisma.CredentialOfferSelect>()({
 });
 
 export const credentialOfferRouter = router({
+	types: publicProcedure.input(z.object({}).nullish()).query(async () => {
+		return await prisma.credentialType.findMany();
+	}),
+	create: businessAdminProcedure
+		.input(
+			z.object({
+				credentialTypeId: z.string(),
+				price: z.number(),
+				name: z.string(),
+				requirementId: z.string().nullish(),
+			}),
+		)
+		.mutation(async ({ input, ctx }) => {
+			const res = await prisma.credentialOffer.create({
+				data: {
+					issuer: {
+						connect: {
+							id: ctx.session.user.selectedBusiness.id,
+						},
+					},
+					credentialType: {
+						connect: {
+							id: input.credentialTypeId,
+						},
+					},
+					name: input.name,
+					price: input.price,
+					status: CredentialOfferStatus.WAITING_APPROVAL,
+					parentRequirement: input.requirementId
+						? {
+								connect: {
+									id: input.requirementId,
+								},
+						  }
+						: undefined,
+					exchange: {
+						connect: {
+							type: ExchangeType.WEB,
+						},
+					},
+				},
+			});
+			return res;
+		}),
 	selectIssuer: publicProcedure // REVIEW - Security risk, how can we limit this when evry instance of the wallet app has semi-public code.
 		.input(
 			z.object({
@@ -157,6 +201,57 @@ export const credentialOfferRouter = router({
 				});
 			}
 			return credentialOffer;
+		}),
+	listAll: publicProcedure
+		.input(
+			z.object({
+				limit: z.number().min(1).max(100).default(10),
+				cursor: z.string().nullish(),
+			}),
+		)
+		.query(async ({ input, ctx }) => {
+			const { cursor, limit } = input;
+			const items = await prisma.credentialOffer.findMany({
+				where: {
+					status: CredentialOfferStatus.APPROVED,
+				},
+				include: {
+					issuer: true,
+					parentRequirement: {
+						include: {
+							credentialType: true,
+							issuer: true,
+						},
+					},
+				},
+				take: limit + 1,
+				cursor: cursor
+					? {
+							id: cursor,
+					  }
+					: undefined,
+				orderBy: {
+					id: "desc",
+				},
+			});
+			if (!items || items.length === 0) {
+				throw new TRPCError({
+					code: "BAD_REQUEST",
+					message: "No credentialOffers found",
+				});
+			}
+			let nextCursor: typeof cursor | undefined = undefined;
+			if (items.length > limit) {
+				// Remove the last item and use it as next cursor
+
+				// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+				const nextItem = items.pop()!;
+				nextCursor = nextItem.id;
+			}
+			return {
+				items: items.reverse(),
+				nextCursor,
+			};
 		}),
 	listBy: publicProcedure
 		.input(

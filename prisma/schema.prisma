@@ -163,6 +163,7 @@ model CredentialExchange {
 }
 
 // Isser put up a offer for a issue credential
+// requirement should been against a credential type with certain limitations on issuer etc.
 model CredentialOffer {
   id                   String                @id @default(cuid())
   createdAt            DateTime              @default(now())

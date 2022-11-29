@@ -104,6 +104,13 @@ export const transactionRouter = router({
 				orderBy: {
 					id: "desc",
 				},
+				include: {
+					credentialOffer: {
+						include: {
+							credentialType: true,
+						},
+					},
+				},
 			});
 			let nextCursor: typeof input.cursor | undefined = undefined;
 			if (items.length > input.limit) {

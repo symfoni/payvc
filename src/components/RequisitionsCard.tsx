@@ -17,7 +17,9 @@ export const RequisitionsCard: React.FC<Props> = ({ ...props }) => {
 			<Card.Divider />
 			<Card.Footer>
 				<Row justify="flex-end">
-					<Button size="sm">Create requisition</Button>
+					<Button as={"a"} size="sm" href="/create-requisition">
+						Create requisition
+					</Button>
 				</Row>
 			</Card.Footer>
 		</Card>

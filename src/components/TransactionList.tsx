@@ -23,13 +23,17 @@ export const TransactionList: React.FC<Props> = ({ ...props }) => {
 		return (
 			<Table aria-label="Credential offers for user" css={{}} compact>
 				<Table.Header>
+					<Table.Column>CREDENTIAL</Table.Column>
 					<Table.Column>STATUS</Table.Column>
 					<Table.Column>REQUSITION STATUS</Table.Column>
-					<Table.Column>STATUS</Table.Column>
+					<Table.Column>AMOUNT</Table.Column>
 				</Table.Header>
 				<Table.Body css={{ size: "small" }}>
 					{data.items.map((item) => (
 						<Table.Row key={item.id}>
+							<Table.Cell css={{ maxWidth: "8rem" }}>
+								<Text small>{item.credentialOffer.credentialType.name}</Text>
+							</Table.Cell>
 							<Table.Cell css={{ maxWidth: "8rem" }}>
 								<Text small>{item.transactionStatus}</Text>
 							</Table.Cell>

@@ -7,6 +7,7 @@ interface Props {}
 
 export const CredentialOfferingList: React.FC<Props> = ({ ...props }) => {
 	const { data, isLoading, error, refetch } = trpc.credentialOffer.listMy.useQuery({});
+	const { data: balanceData } = trpc.balance.listMy.useQuery();
 
 	useEffect(() => {
 		if (!isLoading) {
@@ -35,7 +36,8 @@ export const CredentialOfferingList: React.FC<Props> = ({ ...props }) => {
 								<Text small>{item.name}</Text>
 							</Table.Cell>
 							<Table.Cell>
-								<Currency value={item.transactions.reduce((acu, tx) => tx.price + acu, 0)}></Currency>
+								{/* <Currency value={item.transactions.reduce((acu, tx) => tx.price + acu, 0)}></Currency> */}
+								<Currency value={100}></Currency>
 							</Table.Cell>
 							<Table.Cell>
 								<Text small>{item.status}</Text>

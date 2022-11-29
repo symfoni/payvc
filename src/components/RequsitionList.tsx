@@ -24,7 +24,7 @@ export const RequsitionList: React.FC<Props> = ({ ...props }) => {
 			<Table aria-label="Credential offers for user" css={{}} compact>
 				<Table.Header>
 					<Table.Column>Type</Table.Column>
-					<Table.Column>COST</Table.Column>
+					<Table.Column>TOTAL COST</Table.Column>
 					<Table.Column>PRICE</Table.Column>
 					<Table.Column>Actions</Table.Column>
 				</Table.Header>
@@ -38,7 +38,7 @@ export const RequsitionList: React.FC<Props> = ({ ...props }) => {
 								<Currency value={item.transactions.reduce((acu, tx) => tx.price + acu, 0)}></Currency>
 							</Table.Cell>
 							<Table.Cell>
-								<Text small>{item.price}</Text>
+								<Currency value={item.price}></Currency>
 							</Table.Cell>
 							<Table.Cell>
 								<Button size={"xs"} flat>

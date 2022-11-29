@@ -23,6 +23,38 @@ const exposedFields = Prisma.validator<Prisma.RequsitionSelect>()({
 });
 
 export const requsitionRouter = router({
+	create: businessAdminProcedure.input(z.object({ credentialTypeId: z.string() })).mutation(async ({ input, ctx }) => {
+		const credentialType = await prisma.credentialType.findUnique({
+			where: {
+				id: input.credentialTypeId,
+			},
+		});
+		if (!credentialType) {
+			throw new Error("Credential type not found");
+		}
+		const requsition = await prisma.requsition.create({
+			data: {
+				credentialType: {
+					connect: {
+						id: input.credentialTypeId,
+					},
+				},
+				price: credentialType.price,
+				verifier: {
+					connect: {
+						id: ctx.session.user.selectedBusiness.id,
+					},
+				},
+			},
+		});
+		if (!requsition) {
+			throw new TRPCError({
+				code: "NOT_FOUND",
+				message: "Could not find requsition",
+			});
+		}
+		return requsition;
+	}),
 	get: publicProcedure.input(z.object({ id: z.string() })).query(async ({ input, ctx }) => {
 		const requsition = await prisma.requsition.findUnique({
 			where: {

@@ -273,27 +273,29 @@ async function main() {
 		throw new Error("elon.businesses.length < 1");
 	}
 
-	let tx1 = await intiateTransfer({
-		amount: nationalIdentityCredentialType.price,
-		credentialOfferId: nationalIdentityCrendentialOffer?.id,
-		currency: "EUR",
-		issuerId: nationalIdentityCrendentialOffer.issuerId,
-		requisitionId: boardDirectorRequisition.id,
-		verifierId: boardDirectorRequisition.verifierId,
-		walletId: elon.businesses[0].id,
-	});
+	// let tx1 = await intiateTransfer({
+	// 	amount: nationalIdentityCredentialType.price,
+	// 	credentialOfferId: nationalIdentityCrendentialOffer?.id,
+	// 	currency: "EUR",
+	// 	issuerId: nationalIdentityCrendentialOffer.issuerId,
+	// 	requisitionId: boardDirectorRequisition.id,
+	// 	verifierId: boardDirectorRequisition.verifierId,
+	// 	walletId: elon.businesses[0].id,
+	// });
 
-	await fullfillTransfer({ transactionId: tx1.id, proof: "JUST TEST" });
+	// await fullfillTransfer({ transactionId: tx1.id, proof: "JUST TEST" });
 
 	let tx2 = await intiateTransfer({
 		amount: boardDirectorCredentialType.price,
 		credentialOfferId: boardDirectorNOCrendentialOffer?.id,
 		currency: "EUR",
-		issuerId: nationalIdentityCrendentialOffer.issuerId,
+		issuerId: boardDirectorNOCrendentialOffer.issuerId,
 		requisitionId: boardDirectorRequisition.id,
 		verifierId: boardDirectorRequisition.verifierId,
 		walletId: elon.businesses[0].id,
 	});
+
+	await fullfillTransfer({ transactionId: tx2.id, proof: "JUST TEST 2" });
 
 	console.log("Seeding finished.");
 }
