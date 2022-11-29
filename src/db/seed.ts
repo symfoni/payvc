@@ -282,7 +282,8 @@ async function main() {
 		verifierId: boardDirectorRequisition.verifierId,
 		walletId: elon.businesses[0].id,
 	});
-	tx1 = await fullfillTransfer({ transactionId: tx1.id, proof: "JUST TEST" });
+
+	await fullfillTransfer({ transactionId: tx1.id, proof: "JUST TEST" });
 
 	let tx2 = await intiateTransfer({
 		amount: boardDirectorCredentialType.price,

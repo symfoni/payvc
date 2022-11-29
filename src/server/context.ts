@@ -20,6 +20,7 @@ export async function createContext(opts: trpcNext.CreateNextContextOptions) {
 	if (opts.req.url === "/api/trpc/healthcheck") {
 		return {};
 	}
+	console.log(opts.req.url);
 	// Handle apikeys
 	let session: Session = await getServerSessionFromAPIKey(opts);
 	// handle regular sessions with clients

@@ -9,9 +9,10 @@ export interface GlobalState {
 	initialized: boolean;
 	client: SignClient | undefined;
 	session: SessionTypes.Struct | undefined;
-	init: (name: string, description: string, url: string) => void;
+	init: (name: string, description: string, url: string, reConnect?: boolean) => void;
 	connect: () => void;
 	disconnect: () => void;
+	request: <T>(method: string, params: any[]) => Promise<T>;
 }
 export const useWalletConnect = create<GlobalState>()(
 	persist(
@@ -19,7 +20,7 @@ export const useWalletConnect = create<GlobalState>()(
 			initialized: false,
 			client: undefined,
 			session: undefined,
-			init: async (name: string, description: string, url: string) => {
+			init: async (name: string, description: string, url: string, reConnect?: boolean) => {
 				if (get().initialized) {
 					return;
 				}
@@ -32,7 +33,7 @@ export const useWalletConnect = create<GlobalState>()(
 						icons: ["https://walletconnect.com/walletconnect-logo.png"],
 					},
 				});
-				if (client.session.length) {
+				if (reConnect && client.session.length) {
 					const lastKeyIndex = client.session.keys.length - 1;
 					const _session = client.session.get(client.session.keys[lastKeyIndex]);
 					console.log("RESTORED SESSION:", _session);
@@ -92,10 +93,39 @@ export const useWalletConnect = create<GlobalState>()(
 					return { session: session };
 				});
 			},
+			request: async <T>(method: string, params: any[]) => {
+				const client = get().client;
+				if (!client) {
+					throw new Error("Client not initialized");
+				}
+				const session = get().session;
+				if (!session) {
+					throw new Error("Session not initialized");
+				}
+				let result: T | undefined = undefined;
+				let valid = false;
+				try {
+					result = await client.request<T>({
+						topic: session!.topic,
+						chainId: "eip155:5",
+						request: {
+							method,
+							params,
+						},
+					});
+					valid = true;
+				} catch (e) {
+					valid = false;
+				}
+				if (!result) {
+					throw Error("No vp returned");
+				}
+				return result;
+			},
 		}),
 		{
 			name: "wc-store",
-			partialize: (state) => ({ session: state.session }),
+			partialize: (state) => ({}),
 		},
 	),
 );
