@@ -12,6 +12,9 @@
 - Seed database with testdata `yarn seed`
 - Run server `yarn dev`
 
+# Development
+You can find test users to use in src/db/seed.ts.
+
 # Services
 
 - Email delivery - https://account.postmarkapp.com/
