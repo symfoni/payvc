@@ -1,4 +1,17 @@
+# Requirements
+- Docker
+- Node
+- Yarn
 
+# Run it
+Clone the repository 
+```bash
+cp .env.example .env
+```
+
+
+
+# Development
 
 # Services
 
