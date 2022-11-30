@@ -4,14 +4,13 @@
 - Yarn
 
 # Run it
-Clone the repository 
-```bash
-cp .env.example .env
-```
-
-
-
-# Development
+- Clone the repository 
+- Setup a Postrgres database in docker if you dont have one `yarn docker:postgres`
+- Clone env file with `cp .env.example .env`
+- Install dep: `yarn install``
+- Setup database schema and client `yarn migrate`
+- Seed database with testdata `yarn seed`
+- Run server `yarn dev`
 
 # Services
 
