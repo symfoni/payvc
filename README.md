@@ -2,14 +2,26 @@ PayVC is a platform for putting up a paywall for VCs, which is an essential comp
 
 In the SSI model, the request comes from the user. However, with PayVC, the system transparently allows the Verifier (the party requesting the data) to pay the Issuer directly, while keeping the SSI issuer-holder-verifier chain intact. This solves the issue of ensuring that each party gets paid in complex VC dependency chains, such as when a VC is needed by an Issuer as underlying proof for the VC they are issuing, all without bothering the user.
 
-This project includes a server with dashboards and API. 
+This project provides
 
-* Server med API som gir dashboard til alle
-  * Mangage credential offers and requsitions
-  * Manage payment
-  * statistikk
-* It also includes a Foundry (mock verifier-service) and BR og Symfoni (2x mock issuer-service).
-* For the app used in the demo, got to [payvc-demo-wallet](https://github.com/symfoni/payvc-demo-wallet/tree/demo) 
+* a server with an API and dashboards for the different parties: Issuers, Verifiers and Wallet providers.
+* a database backend
+
+The dashboards allows users to manage credential offers and requisitions, manage payment, and view statistics. In addition to the server, the PayVC platform also includes a three fake comapnies
+
+* Foundry (mock verifier-service), 
+* Symfoni (mock issuer-service), and
+* Business Registry (mock issuer and verifier-service)
+
+The wallet app used in the demo can be found at the following link: [payvc-demo-wallet](https://github.com/symfoni/payvc-demo-wallet/tree/demo)
+
+Some key features of the API and dashboards include:
+
+-   Manage credential offers and requisitions: This allows users to create, view, and manage offers and requisitions for credentials.
+-   Manage payment: This allows users to update their payment information and monitor their transaction history.
+-   View statistics: This provides users with detailed information about their performance, revenue, and spending on the platform.
+
+Overall, the server and API are essential components of the PayVC platform, providing users with the tools and information they need to manage their credential offers and requisitions and monitor their performance on the platform.
 
 ![Imgur](https://i.imgur.com/m6wlxun.png)
 
